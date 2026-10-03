@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz de Consórcio — Treinamento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --text:#1b2333; --muted:#5f6b80; --line:#e3e8f1;
+    --primary:#1f5eff; --primary-dark:#1646c4; --primary-soft:#e8efff;
+    --ok:#12a150; --ok-soft:#e6f7ee; --bad:#d93a3a; --bad-soft:#fdecec;
+    --shadow:0 10px 30px rgba(20,35,70,.08);
+    --hint-bg:#fff8e6; --hint-text:#7a5a00; --pending:#e3e8f1;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f1420; --card:#182031; --text:#e8ecf4; --muted:#9aa6bb; --line:#2a3550;
+      --primary:#4d7fff; --primary-dark:#3a6af0; --primary-soft:#1f2c4d;
+      --ok:#2fc271; --ok-soft:#14321f; --bad:#ff6363; --bad-soft:#3a1a1d;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --hint-bg:#3a3018; --hint-text:#f3d58a; --pending:#2a3550;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+  .wrap{max-width:760px;margin:0 auto;padding:32px 16px 56px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+  .logo{width:42px;height:42px;border-radius:12px;background:var(--primary);display:grid;place-items:center;color:#fff;font-weight:800;font-size:20px}
+  header h1{font-size:20px;margin:0}
+  header p{margin:0;color:var(--muted);font-size:14px}
+  .card{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:28px}
+  .hidden{display:none!important}
+  h2{margin:0 0 8px;font-size:24px}
+  .lead{color:var(--muted);margin:0 0 24px}
+  label{font-weight:600;font-size:14px;display:block;margin-bottom:6px}
+  input[type=text]{width:100%;padding:14px 16px;border:1.5px solid var(--line);border-radius:12px;font:inherit;font-size:16px;outline:none;transition:border .2s}
+  input[type=text]:focus{border-color:var(--primary)}
+  .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+  button{font:inherit;font-weight:600;border:0;border-radius:12px;padding:13px 22px;cursor:pointer;transition:background .2s,transform .05s}
+  button:active{transform:translateY(1px)}
+  .btn{background:var(--primary);color:#fff}
+  .btn:hover{background:var(--primary-dark)}
+  .btn:disabled{background:#b8c4dc;cursor:not-allowed}
+  .btn-ghost{background:var(--primary-soft);color:var(--primary)}
+  .btn-ghost:hover{background:#dbe6ff}
+  .info{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+  .info div{background:var(--bg);border-radius:12px;padding:12px;text-align:center}
+  .info b{display:block;font-size:20px}
+  .info span{font-size:12px;color:var(--muted)}
+  .top{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--muted);margin-bottom:10px}
+  .bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:24px}
+  .bar i{display:block;height:100%;background:var(--primary);width:0;transition:width .35s}
+  .q{font-size:19px;font-weight:600;margin:0 0 20px}
+  .opts{display:flex;flex-direction:column;gap:10px}
+  .opt{display:flex;gap:12px;align-items:flex-start;text-align:left;background:var(--card);border:1.5px solid var(--line);color:var(--text);font-weight:500;padding:14px 16px}
+  .opt:hover:not(:disabled){border-color:var(--primary);background:var(--primary-soft)}
+  .opt .k{flex:none;width:28px;height:28px;border-radius:8px;background:var(--bg);display:grid;place-items:center;font-weight:700;font-size:14px}
+  .opt:disabled{cursor:default}
+  .opt.correct{border-color:var(--ok);background:var(--ok-soft)}
+  .opt.correct .k{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+  .opt.wrong .k{background:var(--bad);color:#fff}
+  .hint-btn{background:none;color:var(--primary);padding:0;margin-top:16px;font-size:14px}
+  .hint{margin-top:10px;background:var(--hint-bg);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--hint-text)}
+  .fb{margin-top:20px;border-radius:12px;padding:16px;font-size:15px}
+  .fb.ok{background:var(--ok-soft);border-left:4px solid var(--ok)}
+  .fb.bad{background:var(--bad-soft);border-left:4px solid var(--bad)}
+  .fb b{display:block;margin-bottom:4px}
+  .score{text-align:center;padding:8px 0 20px}
+  .ring{width:150px;height:150px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--primary) calc(var(--p)*1%),var(--line) 0)}
+  .ring div{width:118px;height:118px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:32px;font-weight:800}
+  .msg{font-size:18px;font-weight:600;margin:0}
+  .sub{color:var(--muted);margin:4px 0 0}
+  .review h3{font-size:16px;margin:28px 0 12px}
+  .rv{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;font-size:14px}
+  .rv p{margin:0 0 6px}
+  .rv .y{color:var(--bad)} .rv .c{color:var(--ok)}
+  .rv .e{color:var(--muted);margin:0}
+  .center{justify-content:center}
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:24px}
+  .dots{display:flex;gap:5px;margin-bottom:24px}
+  .dots i{flex:1;height:8px;border-radius:99px;background:var(--pending);transition:background .3s}
+  .dots i.cur{background:var(--primary)}
+  .dots i.ok{background:var(--ok)}
+  .dots i.bad{background:var(--bad)}
+  .timer{font-variant-numeric:tabular-nums}
+  .streak{display:inline-block;margin-left:8px;font-weight:600;color:var(--primary)}
+  .kbd{font-size:12px;color:var(--muted);margin-top:14px}
+  .kbd b{display:inline-block;border:1px solid var(--line);border-radius:5px;padding:0 6px;font-weight:600;background:var(--bg)}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0 4px}
+  .stats div{background:var(--bg);border-radius:12px;padding:12px;text-align:center}
+  .stats b{display:block;font-size:20px}
+  .stats span{font-size:12px;color:var(--muted)}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--card);padding:10px 18px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;transition:all .25s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .fade{animation:fade .3s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:10}
+  @media (max-width:520px){.card{padding:20px}.q{font-size:17px}.info b,.stats b{font-size:17px}.kbd{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">C</div>
+    <div>
+      <h1>Treinamento de Consórcio</h1>
+      <p>Conceitos e atendimento ao cliente</p>
+    </div>
+  </header>
+
+  <!-- Tela inicial -->
+  <section id="start" class="card">
+    <h2>Teste seus conhecimentos</h2>
+    <p class="lead">Responda às questões sobre funcionamento do consórcio, contemplação, lance, carta de crédito e abordagem ao cliente. Após cada resposta você verá a explicação.</p>
+    <div class="info">
+      <div><b id="totalQ">15</b><span>questões</span></div>
+      <div><b>~10 min</b><span>duração</span></div>
+      <div><b>70%</b><span>para aprovação</span></div>
+    </div>
+    <label for="name">Seu nome</label>
+    <input id="name" type="text" placeholder="Digite seu nome completo" autocomplete="name">
+    <div class="row">
+      <button id="btnStart" class="btn" disabled>Começar quiz</button>
+    </div>
+  </section>
+
+  <!-- Questões -->
+  <section id="quiz" class="card hidden">
+    <div class="top"><span><span id="counter"></span><span id="streak" class="streak"></span></span><span>⏱ <span id="timer" class="timer">00:00</span></span></div>
+    <div class="dots" id="dots"></div>
+    <div id="qbox">
+    <p id="question" class="q"></p>
+    <div id="options" class="opts"></div>
+    <button id="btnHint" class="hint-btn">💡 Ver dica</button>
+    <div id="hint" class="hint hidden"></div>
+    <div id="feedback" class="fb hidden"></div>
+    </div>
+    <div class="row">
+      <button id="btnNext" class="btn hidden">Próxima</button>
+    </div>
+    <p class="kbd">Atalhos: <b>A</b> <b>B</b> <b>C</b> <b>D</b> para responder · <b>Enter</b> para avançar</p>
+  </section>
+
+  <!-- Resultado -->
+  <section id="result" class="card hidden">
+    <div class="score">
+      <div class="ring" id="ring"><div id="pct">0%</div></div>
+      <p class="msg" id="resMsg"></p>
+      <p class="sub" id="resSub"></p>
+      <div class="stats">
+        <div><b id="stCorrect">0</b><span>acertos</span></div>
+        <div><b id="stTime">00:00</b><span>tempo total</span></div>
+        <div><b id="stStreak">0</b><span>maior sequência</span></div>
+      </div>
+    </div>
+    <div class="row center">
+      <button id="btnRetry" class="btn">Refazer quiz</button>
+      <button id="btnCopy" class="btn-ghost">Copiar resultado</button>
+    </div>
+    <div class="review" id="review"></div>
+  </section>
+
+  <footer>Material de treinamento interno</footer>
+</div>
+<canvas id="confetti"></canvas>
+<div id="toast" class="toast"></div>
+
+<script>
+const PASS = 70; // % mínimo para aprovação
+
+const QUESTIONS = [
+  {q:"De forma geral, qual definição explica melhor o funcionamento de um consórcio?",
+   o:["Uma modalidade de crédito em que o cliente recebe o valor contratado imediatamente e começa a pagar posteriormente.",
+      "Uma forma de aquisição planejada em grupo, na qual os participantes contribuem conforme o plano e podem ser contemplados ao longo do período.",
+      "Uma compra parcelada em que a administradora garante a entrega do bem após o pagamento de algumas parcelas.",
+      "Uma modalidade de financiamento coletivo em que todos os participantes recebem o crédito na mesma data."],
+   a:1, h:"Pense em duas palavras-chave: grupo e planejamento.",
+   e:"O consórcio é uma aquisição planejada em grupo: todos contribuem conforme o plano e as contemplações acontecem ao longo do período, não de uma vez nem de forma garantida."},
+  {q:"Um cliente pergunta: “Se eu ainda não fui contemplado, por que preciso continuar pagando as parcelas?” Qual explicação é mais adequada?",
+   o:["Porque as parcelas servem principalmente para manter o cliente participando dos sorteios.",
+      "Porque o pagamento das parcelas só começa a ter validade após a contemplação.",
+      "Porque as parcelas fazem parte do plano contratado e da participação do consorciado no grupo, independentemente do momento da contemplação.",
+      "Porque o cliente precisa quitar uma parte da motocicleta antes de ter direito ao sorteio."],
+   a:2, h:"As parcelas estão ligadas ao contrato, não ao momento da contemplação.",
+   e:"As parcelas são a contribuição do consorciado ao grupo, previstas no plano contratado. Elas existem antes e depois da contemplação."},
+  {q:"Um consultor fala sobre “carta de crédito” com um cliente. Qual alternativa demonstra melhor que ele compreende o conceito?",
+   o:["É o valor que o cliente já possui disponível para oferecer como lance.",
+      "É o crédito ao qual o consorciado tem acesso após a contemplação, observadas as condições e procedimentos do plano.",
+      "É o documento utilizado para garantir que o cliente será contemplado dentro de determinado prazo.",
+      "É o valor correspondente à soma das parcelas que o cliente já pagou ao grupo."],
+   a:1, h:"A carta de crédito se relaciona com o que acontece depois da contemplação.",
+   e:"A carta de crédito é o crédito que o consorciado acessa após ser contemplado, respeitando as condições e procedimentos do plano. Não é lance, garantia de prazo nem soma do que foi pago."},
+  {q:"Sobre as formas de contemplação, assinale a alternativa mais adequada.",
+   o:["A contemplação ocorre somente por sorteio, enquanto o lance serve apenas para antecipar parcelas.",
+      "A contemplação pode ocorrer por sorteio ou lance, de acordo com as regras estabelecidas para o grupo.",
+      "A contemplação ocorre por aprovação de crédito ou pagamento antecipado das parcelas.",
+      "O cliente escolhe entre sorteio e lance no momento da contratação e a contemplação fica automaticamente garantida."],
+   a:1, h:"São duas formas, e quem define os critérios é o grupo.",
+   e:"As duas formas de contemplação são sorteio e lance, ambas seguindo as regras do grupo. Nenhuma delas é escolhida na contratação nem garante resultado."},
+  {q:"Um cliente afirma: “Se eu der um lance, então minha moto está garantida”. Qual resposta demonstra melhor domínio do assunto?",
+   o:["“Sim, desde que o valor do lance seja superior ao valor das parcelas que você já pagou.”",
+      "“O lance aumenta automaticamente a prioridade do cliente, então a contemplação fica praticamente garantida.”",
+      "“O lance é uma possibilidade de buscar a contemplação, mas o resultado depende das regras e das condições aplicáveis ao grupo.”",
+      "“O lance garante a contemplação, mas somente depois que a administradora aprovar o cadastro.”"],
+   a:2, h:"Desconfie de qualquer resposta que fale em “garantia”.",
+   e:"O lance é uma possibilidade, não uma garantia. O resultado depende das regras do grupo e das condições aplicáveis. Prometer contemplação é um erro grave de atendimento."},
+  {q:"Um cliente possui uma carta de crédito de R$ 40.000 e informa que pretende oferecer R$ 8.000 como lance. Qual percentual esse valor representa sobre a carta?",
+   o:["15%","20%","25%","30%"], a:1, fixed:true,
+   h:"Divida o lance pelo valor da carta e multiplique por 100.",
+   e:"R$ 8.000 ÷ R$ 40.000 = 0,20, ou seja, 20% da carta de crédito."},
+  {q:"Um cliente pergunta: “Qual é a diferença entre eu entrar em um consórcio e fazer um financiamento?” Qual explicação é mais coerente?",
+   o:["No consórcio existe uma dinâmica de grupo e contemplação; no financiamento existe uma operação de crédito para aquisição do bem.",
+      "No consórcio o cliente recebe o bem imediatamente, enquanto no financiamento precisa aguardar a contemplação.",
+      "As duas modalidades funcionam da mesma forma, mas possuem nomes diferentes e condições comerciais distintas.",
+      "No financiamento o cliente participa de sorteios, enquanto no consórcio o crédito é liberado mediante análise bancária."],
+   a:0, h:"Uma modalidade envolve grupo; a outra, uma operação de crédito.",
+   e:"Consórcio funciona por grupo e contemplação; financiamento é uma operação de crédito para comprar o bem. As outras alternativas invertem ou igualam as modalidades."},
+  {q:"Um cliente diz: “Eu preciso da motocicleta logo. Não sei se o consórcio faz sentido para mim”. Qual seria uma boa primeira pergunta do consultor?",
+   o:["“Você prefere pagar uma parcela menor ou maior?”",
+      "“Você já conhece alguém que foi contemplado?”",
+      "“Qual é o prazo que você tem para adquirir a motocicleta?”",
+      "“Você quer que eu apresente primeiro o plano com a menor parcela?”"],
+   a:2, h:"A preocupação do cliente é com tempo.",
+   e:"O cliente levantou urgência. Entender o prazo dele é o primeiro passo para avaliar, com honestidade, se o consórcio atende à necessidade."},
+  {q:"Sobre o sorteio em um consórcio, qual alternativa está mais adequada?",
+   o:["É uma escolha realizada pelo vendedor entre os clientes que demonstraram maior interesse.",
+      "É uma forma de contemplação realizada conforme os critérios e regras estabelecidos para o grupo.",
+      "É uma forma de aprovação utilizada quando o cliente não possui recursos para oferecer lance.",
+      "É um benefício concedido ao cliente depois que ele atinge determinado número de parcelas pagas."],
+   a:1, h:"Quem define os critérios do sorteio?",
+   e:"O sorteio é uma das formas de contemplação e segue os critérios e regras do grupo. Não depende do vendedor nem é um prêmio por parcelas pagas."},
+  {q:"Durante uma apresentação, o cliente pergunta: “Depois que eu for contemplado, o que acontece?” Qual resposta é mais adequada?",
+   o:["“Você encerra automaticamente sua participação e deixa de pagar as parcelas restantes.”",
+      "“Você recebe obrigatoriamente o valor em dinheiro e pode utilizá-lo como quiser.”",
+      "“A contemplação permite o acesso ao crédito, que poderá ser utilizado conforme as regras e procedimentos do plano.”",
+      "“A motocicleta é liberada automaticamente, independentemente das etapas previstas no contrato.”"],
+   a:2, h:"Nada é automático após a contemplação.",
+   e:"A contemplação dá acesso ao crédito, que é usado conforme as regras e procedimentos do plano. As parcelas continuam e há etapas a cumprir."},
+  {q:"Um consultor está começando a explicar o consórcio para um cliente que nunca teve contato com o produto. Qual sequência faz mais sentido?",
+   o:["Parcela → valor do lance → sorteio → financiamento → carta de crédito.",
+      "Carta de crédito → valor da motocicleta → financiamento → contemplação → parcela.",
+      "Funcionamento do grupo → parcelas/plano → formas de contemplação → carta de crédito e utilização após contemplação.",
+      "Valor da parcela → promessa de contemplação → escolha da motocicleta → regras do grupo."],
+   a:2, h:"Comece pela base e siga a ordem natural do processo.",
+   e:"A sequência lógica acompanha a jornada: como o grupo funciona, o que se paga, como se é contemplado e o que se faz com o crédito depois."},
+  {q:"Um cliente diz: “Consórcio é melhor porque não tem juros, então com certeza vou pagar menos que em um financiamento”. Qual postura é mais adequada?",
+   o:["Concordar, porque a ausência de juros significa automaticamente menor custo total.",
+      "Explicar que as modalidades possuem estruturas e custos diferentes e que a comparação deve considerar as condições de cada opção.",
+      "Informar que o financiamento sempre terá custo maior porque possui juros.",
+      "Evitar falar sobre custos e direcionar a conversa somente para o valor da parcela."],
+   a:1, h:"O consórcio também tem custos próprios.",
+   e:"Cada modalidade tem estrutura e custos diferentes. A comparação honesta considera as condições de cada opção, sem afirmar “com certeza” nem fugir do tema."},
+  {q:"Um cliente possui uma carta de crédito de R$ 35.000 e pergunta qual percentual representa um lance de R$ 7.000. O consultor calcula 20%. O que ele deve fazer em seguida?",
+   o:["Informar que 20% é suficiente para garantir a contemplação.",
+      "Explicar que 20% representa o percentual do lance, mas que esse cálculo, sozinho, não garante a contemplação.",
+      "Informar que o cliente precisa aumentar o lance até atingir pelo menos 30%.",
+      "Explicar que o percentual do lance só pode ser calculado depois da contemplação."],
+   a:1, h:"O cálculo está certo; o cuidado está na interpretação.",
+   e:"O cálculo informa o tamanho do lance, mas não define o resultado. O consultor deve deixar claro que nenhum percentual, por si só, garante contemplação."},
+  {q:"Um cliente apresenta três preocupações: “Não sei quando vou ser contemplado”, “não quero uma parcela que pese no orçamento” e “não sei se vou conseguir dar lance”. Qual atitude demonstra uma abordagem mais adequada?",
+   o:["Mostrar primeiro o plano com a maior carta de crédito para aumentar as possibilidades de venda.",
+      "Explicar as formas de contemplação, entender a capacidade de pagamento e verificar se o cliente possui algum recurso que poderia utilizar em um lance, sem prometer resultado.",
+      "Informar que, sem dinheiro para lance, o consórcio provavelmente não será interessante para ele.",
+      "Concentrar a conversa no valor da parcela e deixar a questão da contemplação para depois da contratação."],
+   a:1, h:"Procure a alternativa que responde às três preocupações.",
+   e:"A abordagem certa trata cada preocupação: explica a contemplação, respeita o orçamento e avalia a possibilidade de lance, tudo sem prometer resultado."},
+  {q:"Um consultor precisa explicar para um cliente a relação entre parcela, contemplação e carta de crédito. Qual alternativa apresenta os conceitos de forma mais correta?",
+   o:["A parcela representa o crédito disponível; a contemplação corresponde ao pagamento mensal; e a carta de crédito representa o sorteio.",
+      "A parcela é uma contribuição prevista no plano; a contemplação é o momento em que o consorciado passa a ter acesso ao crédito conforme as regras; e a carta de crédito corresponde ao crédito destinado à aquisição.",
+      "A parcela e a carta de crédito representam o mesmo valor, enquanto a contemplação acontece quando o cliente termina de pagar o plano.",
+      "A parcela determina automaticamente a contemplação, enquanto a carta de crédito corresponde ao valor total já pago pelo cliente."],
+   a:1, h:"Cada conceito tem um papel diferente: contribuir, acessar e adquirir.",
+   e:"Parcela é a contribuição; contemplação é o acesso ao crédito conforme as regras; carta de crédito é o crédito para a aquisição. As demais alternativas misturam os conceitos."}
+];
+
+const $ = id => document.getElementById(id);
+const LETTERS = ["A","B","C","D","E"];
+let state = {name:"", order:[], i:0, score:0, answers:[], streak:0, best:0, t0:0, answered:false};
+let timerId = null;
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+const fmt = ms => { const s = Math.floor(ms/1000); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); };
+
+function show(id){["start","quiz","result"].forEach(s=>$(s).classList.toggle("hidden",s!==id)); window.scrollTo(0,0);}
+
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
+
+$("totalQ").textContent = QUESTIONS.length;
+$("name").addEventListener("input", e => $("btnStart").disabled = e.target.value.trim().length < 2);
+$("name").addEventListener("keydown", e => { if(e.key==="Enter" && !$("btnStart").disabled) start(); });
+$("btnStart").onclick = start;
+$("btnNext").onclick = next;
+$("btnRetry").onclick = () => { show("start"); $("name").focus(); };
+$("btnCopy").onclick = copyResult;
+$("btnHint").onclick = () => { $("hint").classList.remove("hidden"); $("btnHint").classList.add("hidden"); };
+
+// Atalhos de teclado: A-D ou 1-4 respondem, Enter avança
+document.addEventListener("keydown", e => {
+  if($("quiz").classList.contains("hidden")) return;
+  const k = e.key.toUpperCase();
+  if(!state.answered){
+    let pos = LETTERS.indexOf(k);
+    if(pos < 0 && /^[1-9]$/.test(k)) pos = +k - 1;
+    const btn = $("options").children[pos];
+    if(btn){ e.preventDefault(); btn.click(); }
+  } else if(e.key === "Enter"){ e.preventDefault(); next(); }
+});
+
+// Evita sair sem querer no meio do quiz
+window.addEventListener("beforeunload", e => {
+  if(!$("quiz").classList.contains("hidden")){ e.preventDefault(); e.returnValue = ""; }
+});
+
+function start(){
+  state = {name:$("name").value.trim(), i:0, score:0, answers:[], streak:0, best:0, t0:Date.now(), answered:false,
+    // embaralha a ordem das alternativas (menos as numéricas) para evitar padrões de gabarito
+    order: QUESTIONS.map(q => q.fixed ? q.o.map((_,k)=>k) : shuffle(q.o.map((_,k)=>k)))};
+  $("dots").innerHTML = QUESTIONS.map(()=>"<i></i>").join("");
+  clearInterval(timerId);
+  timerId = setInterval(()=> $("timer").textContent = fmt(Date.now()-state.t0), 1000);
+  $("timer").textContent = "00:00";
+  show("quiz"); render();
+}
+
+function render(){
+  const q = QUESTIONS[state.i], ord = state.order[state.i];
+  state.answered = false;
+  $("counter").textContent = `Questão ${state.i+1} de ${QUESTIONS.length}`;
+  $("streak").textContent = state.streak >= 3 ? `🔥 ${state.streak} seguidas` : "";
+  [...$("dots").children].forEach((d,k)=> d.classList.toggle("cur", k===state.i));
+  $("question").textContent = q.q;
+  $("hint").textContent = q.h; $("hint").classList.add("hidden"); $("btnHint").classList.remove("hidden");
+  $("feedback").classList.add("hidden"); $("btnNext").classList.add("hidden");
+  const box = $("options"); box.innerHTML = "";
+  ord.forEach((orig, pos) => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.dataset.orig = orig;
+    b.innerHTML = `<span class="k">${LETTERS[pos]}</span><span></span>`;
+    b.lastChild.textContent = q.o[orig];
+    b.onclick = () => answer(orig);
+    box.appendChild(b);
+  });
+  const qb = $("qbox"); qb.classList.remove("fade"); void qb.offsetWidth; qb.classList.add("fade");
+}
+
+function answer(choice){
+  if(state.answered) return;
+  state.answered = true;
+  const q = QUESTIONS[state.i], ok = choice === q.a;
+  if(ok){ state.score++; state.streak++; state.best = Math.max(state.best, state.streak); }
+  else state.streak = 0;
+  state.answers.push({choice, ok});
+  const dot = $("dots").children[state.i]; dot.classList.remove("cur"); dot.classList.add(ok ? "ok" : "bad");
+  $("streak").textContent = state.streak >= 3 ? `🔥 ${state.streak} seguidas` : "";
+  [...$("options").children].forEach(b => {
+    b.disabled = true;
+    const o = +b.dataset.orig;
+    if(o === q.a) b.classList.add("correct");
+    else if(o === choice) b.classList.add("wrong");
+  });
+  $("btnHint").classList.add("hidden");
+  const fb = $("feedback");
+  fb.className = "fb fade " + (ok ? "ok" : "bad");
+  fb.innerHTML = `<b>${ok ? "✅ Resposta correta!" : "❌ Resposta incorreta."}</b><span></span>`;
+  fb.lastChild.textContent = q.e;
+  $("btnNext").textContent = state.i === QUESTIONS.length-1 ? "Ver resultado" : "Próxima";
+  $("btnNext").classList.remove("hidden");
+  $("btnNext").focus({preventScroll:true});
+  fb.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+function next(){
+  if(!state.answered) return;
+  state.i++;
+  if(state.i < QUESTIONS.length){ render(); window.scrollTo({top:0,behavior:"smooth"}); } else finish();
+}
+
+function finish(){
+  clearInterval(timerId);
+  const total = QUESTIONS.length, pct = Math.round(state.score/total*100), pass = pct >= PASS;
+  state.time = fmt(Date.now()-state.t0); state.pct = pct; state.pass = pass;
+  $("ring").style.background = `conic-gradient(${pass?"var(--ok)":"var(--bad)"} ${pct}%, var(--line) 0)`;
+  $("pct").textContent = pct + "%";
+  $("resMsg").textContent = pct === 100 ? `Gabaritou, ${state.name}! 🏆`
+    : pass ? `Parabéns, ${state.name}! Você foi aprovado(a).` : `${state.name}, ainda não foi desta vez.`;
+  $("resSub").textContent = pass ? `Mínimo para aprovação: ${PASS}%`
+    : `Você precisa de ${PASS}% para ser aprovado(a). Revise as explicações abaixo e tente de novo.`;
+  $("stCorrect").textContent = `${state.score}/${total}`;
+  $("stTime").textContent = state.time;
+  $("stStreak").textContent = state.best;
+  const wrong = state.answers.map((a,k)=>({...a,k})).filter(a=>!a.ok);
+  const rv = $("review"); rv.innerHTML = "";
+  if(wrong.length){
+    const h = document.createElement("h3"); h.textContent = `Revise as questões que você errou (${wrong.length})`; rv.appendChild(h);
+    wrong.forEach(w => {
+      const q = QUESTIONS[w.k], d = document.createElement("div");
+      d.className = "rv";
+      d.innerHTML = `<p><b></b></p><p class="y"></p><p class="c"></p><p class="e"></p>`;
+      d.children[0].firstChild.textContent = `${w.k+1}. ${q.q}`;
+      d.children[1].textContent = "Sua resposta: " + q.o[w.choice];
+      d.children[2].textContent = "Correta: " + q.o[q.a];
+      d.children[3].textContent = q.e;
+      rv.appendChild(d);
+    });
+  } else {
+    const h = document.createElement("h3"); h.textContent = "Você acertou todas as questões! 🎉"; rv.appendChild(h);
+  }
+  show("result");
+  if(pass) confetti();
+}
+
+function copyResult(){
+  const txt = `📋 Quiz de Consórcio\n👤 ${state.name}\n✅ ${state.score}/${QUESTIONS.length} acertos (${state.pct}%) — ${state.pass ? "APROVADO(A)" : "NÃO APROVADO(A)"}\n⏱ Tempo: ${state.time}\n📅 ${new Date().toLocaleString("pt-BR")}`;
+  const done = () => toast("Resultado copiado! Cole no WhatsApp ou e-mail.");
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt, done));
+  } else fallbackCopy(txt, done);
+}
+function fallbackCopy(txt, done){
+  const ta = document.createElement("textarea"); ta.value = txt; ta.style.position="fixed"; ta.style.opacity="0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); done(); }catch(e){ toast("Não foi possível copiar. Tire um print da tela."); }
+  ta.remove();
+}
+
+function confetti(){
+  const c = $("confetti"), ctx = c.getContext("2d");
+  c.width = innerWidth; c.height = innerHeight;
+  const colors = ["#1f5eff","#12a150","#ffb800","#ff5c8a","#8b5cf6"];
+  const parts = Array.from({length:140}, () => ({
+    x: Math.random()*c.width, y: -20 - Math.random()*c.height*0.5,
+    w: 6+Math.random()*6, h: 8+Math.random()*8, vy: 2+Math.random()*3, vx: -1.5+Math.random()*3,
+    r: Math.random()*Math.PI, vr: -0.2+Math.random()*0.4, color: colors[Math.floor(Math.random()*colors.length)]
+  }));
+  const end = Date.now() + 3500;
+  (function frame(){
+    ctx.clearRect(0,0,c.width,c.height);
+    parts.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+    });
+    if(Date.now() < end) requestAnimationFrame(frame); else ctx.clearRect(0,0,c.width,c.height);
+  })();
+}
+</script>
+</body>
+</html>
